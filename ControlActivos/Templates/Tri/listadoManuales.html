@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Listado Manuales{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <h2 class="text-center mt-5 mb-5" style="color:black ;">Listado de Registros Manuales</h2>
+
+    <div class="table-responsive shadow-sm rounded-3 mt-4">
+        <table class="table table-striped table-hover align-middle text-center">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Número</th>
+                    <th>Imagen</th>
+                    <th>Vigilante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tri in tris %}
+                <tr>
+                    <td>{{ tri.id }}</td>
+                    <td>{{ tri.fecha }}</td>
+                    <td>{{ tri.hora }}</td>
+                    <td>{{ tri.numero_manual }}</td>                
+                    <td>
+                        {% if tri.ruta_imagen %}
+                            <img src="{{ tri.ruta_imagen.url }}" style="width: 200px;">
+                        {% else %}
+                            No hay imagen
+                        {% endif %}
+                       
+                    </td>
+                    <td>{{ tri.vigilante.first_name }}</td>    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

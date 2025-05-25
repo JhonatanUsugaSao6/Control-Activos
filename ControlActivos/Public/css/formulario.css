@@ -1,0 +1,183 @@
+html, body{
+    height: 100%;
+    margin: 0;
+    font-family: 'Times New Roman', Times, serif
+}
+
+.input{
+    border: 2px solid black;
+}
+
+.titulo-header{
+    text-align: center;
+    color: #6ba43a;
+}
+
+.header{
+    background-color: white;
+    border-bottom: 3px solid #6ba43a; 
+}
+
+.footer{
+    background-color: white;
+    border-top: 3px solid #6ba43a; 
+    
+}
+
+.boton{
+    border: 2px solid black;
+    color: white;
+    background-color: #6ba43a;
+}
+
+.boton:hover {
+    background-color: #a8b999;
+    color: black;
+    border: 2px solid black;
+}   
+
+.form-container {
+    width: 50%;
+    height: 100%;
+    padding: 30px;
+    border-radius: 30px;
+    font-size: 18px;
+    border: 4px solid #6ba43a;
+    margin-top: 15px;
+    margin-bottom: 50px;
+}
+
+
+
+.inicio-sesion{
+    width: 35%;
+    height: 500px;
+}
+
+.titulo{
+    padding: 20px;
+    text-align: center;
+}
+
+.error{
+    color: rgb(202, 39, 39);
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.link{
+    color: white;
+    font-size: 20px;
+}
+
+
+.link-header {
+    color: #6ba43a;
+    font-size: 20px;
+    text-decoration: none;        
+    font-weight: 500;
+    padding: 8px 12px;
+    margin: 0 6px;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.link-header:hover {
+    background-color: #6ba43a;
+    color: white;
+}   
+
+
+
+/* Estilo para cambiar el color del chulito */
+.custom-checkbox {
+    position: relative;
+    border-radius: 3px;
+    border: 2px solid black;
+    background-color: grey;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.custom-checkbox:checked {
+    border-color: black;
+    background-color: transparent;
+}
+
+.custom-checkbox:checked::before {
+    content: "\2713"; /* Unicode para el chulito */
+    color: black;
+    position: absolute;
+    bottom: -3px;
+    left: 2px;
+    font-size: 16px;
+}
+
+
+
+
+
+/* Estilo para los inputs dentro de los divs */
+.checkbox-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.checkbox-wrapper .form-select,
+.checkbox-wrapper .form-control {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+
+
+.checkbox-wrapper select, 
+.checkbox-wrapper input[type="text"] {
+    margin-top: 8px;
+    width: 100%;
+}
+
+.checkbox-wrapper input[type="text"]:not(:empty) {
+    display: block;
+}
+
+
+
+
+
+
+.table th,
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    background-color: #6ba43a;
+    color: #fff;
+}
+
+
+
+
+.link-header {
+    color: #6ba43a !important; 
+    text-decoration: none;
+}
+
+.link-header:hover {
+    color: white !important; 
+}
+
+
+@media (max-width: 600px) {
+    .form-container{
+        width: 100%;
+    }
+
+    .inicio-sesion {
+        width: 100%;
+        max-width: 500px;
+    }
+}

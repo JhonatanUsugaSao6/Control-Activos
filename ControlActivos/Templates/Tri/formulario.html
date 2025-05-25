@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Validar TRI{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="min-height: 55vh;">
+
+    <h2 class="text-center mt-5 mb-5" style="color:black;">Control de Activos</h2>
+
+    {% if messages %}
+    <div class="d-flex justify-content-center mt-3">
+        <div style="width: 100%; max-width: 600px;">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <form id="formulario_salida" method="get" action="{{ request.path }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Selector de tipo -->
+        <div class="row justify-content-center">
+            <div class="col-lg-3 col-md-4 col-sm-4 mb-3">
+                <label for="tipo_ingreso" class="form-label"><b>Tipo de salida:</b></label>
+                <select id="tipo_ingreso" name="tipo_ingreso" class="form-select" style="border: 2px solid black;" onchange="mostrarFormulario()">
+                    <option value="" disabled {% if not consecutivo and not numero_manual %}selected{% endif %}>Seleccione una opción</option>
+                    <option value="consecutivo" {% if consecutivo %}selected{% endif %}>Consecutivo</option>
+                    <option value="manual" {% if numero_manual %}selected{% endif %}>Manual</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Formulario para consecutivo -->
+        <div class="row justify-content-center" id="formulario_consecutivo" style="display: none;">
+            <div class="col-lg-3 col-md-4 col-sm-4 mb-3">
+                <label for="consecutivo" class="form-label"><b>Consecutivo:</b></label>
+                <input type="text" id="consecutivo" name="consecutivo" class="form-control" 
+                    autocomplete="off" value="{{ consecutivo }}" 
+                    style="border: 2px solid black;" placeholder="Ingrese el consecutivo...">
+            </div>
+        </div>
+
+       <!-- Formulario para manual -->
+        <div class="row justify-content-center" id="formulario_manual" style="display: none;">
+            <div class="col-lg-3 col-md-4 col-sm-4 mb-3">
+                <label for="numero_manual" class="form-label"><b>Número Manual:</b></label>
+                <input type="text" id="numero_manual" name="numero_manual" class="form-control"
+                    placeholder="Ingrese número..." style="border: 2px solid black;">
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-sm-4 mb-3">
+                <label for="foto_manual" class="form-label"><b>Foto:</b></label>
+                <input type="file" id="foto_manual" name="foto_manual" class="form-control"
+                    accept="image/png, image/jpeg" style="border: 2px solid black;">
+            </div>          
+            
+        </div>
+        
+
+
+        <div class="d-flex justify-content-center">
+            <button id="boton-salida" type="submit" class="btn btn-outline-success text-center mt-3 mb-3 boton">Buscar</button>
+        </div>
+    </form>
+
+    {% if resultado %}
+    <form method="post" action="{% url 'validarTri' %}">
+        <input type="hidden" name="consecutivo" value="{{ consecutivo }}">
+        {% csrf_token %}
+        <div class="table-responsive shadow-sm rounded-3 mt-4">
+            <table id="tabla_resultado" class="table table-striped table-hover align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>          
+                        <th>Referencia</th>     
+                        <th>Descripción</th>           
+                        <th>U.M.</th>
+                        <th>Cantidad</th>
+                        <th>Proveedor</th> 
+                        <th>Sello</th>
+                        <th>Firma Almacén</th>     
+                        <th>Firma Proveedor</th>
+                        <th>Marcación</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in resultado %}
+                    <tr>
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_fecha_{{ forloop.counter0 }}">
+                                        {{ item.Fecha350 }}
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="fecha_ok_{{ forloop.counter0 }}" 
+                                    id="check_fecha_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'fecha', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_fecha_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_fecha_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Fecha Incorrecta" class="text-start">Fecha Incorrecta</option>
+                                        <option value="Sin Fecha" class="text-start">Sin Fecha</option>
+                                    </select>
+                                    
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td>{{ item.Referencia }}</td>
+                        <input type="hidden" name="referencia_{{ forloop.counter0 }}" value="{{ item.Referencia }}">
+                        
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_descripcion_{{ forloop.counter0 }}">
+                                        {{ item.Descripcion }}
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="descripcion_ok_{{ forloop.counter0 }}" 
+                                    id="check_descripcion_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'descripcion', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_descripcion_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_descripcion_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Descripción Incorrecta" class="text-start">Descripción Incorrecta</option>
+                                        <option value="Sin Descripción" class="text-start">Sin Descripción</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                
+                        <td>{{ item.UnidadMedida }}</td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_cantidad_{{ forloop.counter0 }}">
+                                        {{ item.Cantidad }}
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="cantidad_ok_{{ forloop.counter0 }}" 
+                                    id="check_cantidad_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'cantidad', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_cantidad_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_cantidad_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Cantidad Incorrecta" class="text-start">Cantidad Incorrecta</option>
+                                        <option value="Sin Cantidad" class="text-start">Sin Cantidad</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_ubicacion_{{ forloop.counter0 }}">
+                                        {{ item.Ubicacion }}
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="ubicacion_ok_{{ forloop.counter0 }}" 
+                                    id="check_ubicacion_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'ubicacion', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_ubicacion_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_ubicacion_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Proveedor Incorrecto" class="text-start">Proveedor Incorrecto</option>
+                                        <option value="Sin Proveedor" class="text-start">Sin Proveedor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_sello_{{ forloop.counter0 }}">
+                                        Cumple con Sello
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="sello_ok_{{ forloop.counter0 }}" 
+                                    id="check_sello_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'sello', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_sello_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_sello_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Sello Incorrecto" class="text-start">Sello Incorrecto</option>
+                                        <option value="Sin Sello" class="text-start">Sin Sello</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_firmaalmacen_{{ forloop.counter0 }}">
+                                        Cumple con Firma Almacén
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="firmaalmacen_ok_{{ forloop.counter0 }}" 
+                                    id="check_firmaalmacen_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'firmaalmacen', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_firmaalmacen_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_firmaalmacen_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Firma Almacén Incorrecta" class="text-start">Firma Incorrecta</option>
+                                        <option value="Sin Firma Almacén" class="text-start">Sin Firma</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_firmaproveedor_{{ forloop.counter0 }}">
+                                        Cumple con Firma Proveedor
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="firmaproveedor_ok_{{ forloop.counter0 }}" 
+                                    id="check_firmaproveedor_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'firmaproveedor', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_firmaproveedor_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_firmaproveedor_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Firma Proveedor Incorrecta" class="text-start">Firma Incorrecta</option>
+                                        <option value="Sin Firma Proveedor" class="text-start">Sin Firma</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                
+                        <td class="text-center align-middle">
+                            <div class="checkbox-wrapper">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="check_marcacion_{{ forloop.counter0 }}">
+                                        Marcación
+                                    </label>
+                                    <input type="checkbox" class="form-check-input custom-checkbox" name="marcacion_ok_{{ forloop.counter0 }}" 
+                                    id="check_marcacion_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'marcacion', {{ forloop.counter0 }})">
+                                </div>
+                                <div id="motivo_marcacion_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
+                                    <select name="motivo_marcacion_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
+                                        <option selected disabled class="text-start">Seleccione</option>
+                                        <option value="Marcación Incorrecta" class="text-start">Marcación Incorrecta</option>
+                                        <option value="Marcación Borrosa" class="text-start">Marcación Borrosa</option>
+                                        <option value="Sin Marcación" class="text-start">Sin Marcación</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <input type="hidden" name="total_items" value="{{ resultado|length }}">
+        <div class="text-center mt-3">
+            <button id="guardar-validaciones" type="submit" class="btn btn-success mt-5 mb-5 boton">Guardar Validaciones</button>
+        </div>
+    </form>
+    {% elif consecutivo %}
+        <div class="alert alert-danger text-center">
+            No se encontró información para el consecutivo <strong>{{ consecutivo }}</strong>.
+        </div>
+    {% endif %}
+</div>
+
+
+<script>
+    
+    function mostrarMotivo(checkboxElement, tipo, index) {
+        const motivoDiv = document.getElementById('motivo_' + tipo + '_' + index);
+        if (checkboxElement.checked) {
+            motivoDiv.style.display = 'none';
+        } else {
+            motivoDiv.style.display = 'block';
+        }
+    }
+    
+    document.getElementById("tipo_ingreso").addEventListener("change", function () {
+        const tipo = this.value;
+        document.getElementById("formulario_consecutivo").style.display = (tipo === "consecutivo") ? "flex" : "none";
+        document.getElementById("formulario_manual").style.display = (tipo === "manual") ? "flex" : "none";
+    
+        // ✅ Cambia el método del formulario según el tipo
+        const form = document.getElementById("formulario_salida");
+        if (form) {
+            form.method = (tipo === "manual") ? "post" : "get";
+        }
+    });
+    
+    window.addEventListener("DOMContentLoaded", function () {
+        const tipo = document.getElementById("tipo_ingreso").value;
+    
+        const formularioConsecutivo = document.getElementById("formulario_consecutivo");
+        const formularioManual = document.getElementById("formulario_manual");
+        const tabla = document.getElementById("tabla_resultado");
+    
+        formularioConsecutivo.style.display = (tipo === "consecutivo") ? "flex" : "none";
+        formularioManual.style.display = (tipo === "manual") ? "flex" : "none";
+    
+        if (tabla) {
+            tabla.style.display = (tipo === "manual") ? "none" : "table";
+        }
+    
+        // ✅ También lo configuramos al cargar la página
+        const form = document.getElementById("formulario_salida");
+        if (form) {
+            form.method = (tipo === "manual") ? "post" : "get";
+        }
+    });
+    
+    function mostrarFormulario() {
+        const tipo = document.getElementById("tipo_ingreso").value;
+    
+        const formularioConsecutivo = document.getElementById("formulario_consecutivo");
+        const formularioManual = document.getElementById("formulario_manual");
+        const tabla = document.getElementById("tabla_resultado");
+        const boton = document.getElementById("boton-salida");
+        const guardar = document.getElementById("guardar-validaciones");
+    
+        formularioConsecutivo.style.display = (tipo === "consecutivo") ? "flex" : "none";
+        formularioManual.style.display = (tipo === "manual") ? "flex" : "none";
+    
+        if (tabla) {
+            tabla.style.display = (tipo === "manual") ? "none" : "table";
+        }
+        if (boton) {
+            boton.textContent = (tipo === "manual") ? "Guardar" : "Buscar";
+        }
+        if (guardar) {
+            guardar.style.display = (tipo === "manual") ? "none" : "block";
+            guardar.style.margin = "0 auto"; 
+        }
+    
+        // ✅ Asegura el método correcto también aquí
+        const form = document.getElementById("formulario_salida");
+        if (form) {
+            form.method = (tipo === "manual") ? "post" : "get";
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Listado TRI{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <h2 class="text-center mt-5 mb-5" style="color:black ;">Listado de Registros TRI</h2>
+
+    <div class="table-responsive shadow-sm rounded-3 mt-4">
+        <table class="table table-striped table-hover align-middle text-center">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Consecutivo</th>
+                    <th>Referencia</th>
+                    <th>Descripción</th>
+                    <th>Bodega</th>
+                    <th>Extensión</th>
+                    <th>Unidad</th>
+                    <th>Cantidad</th>
+                    <th>Ubicación</th>
+                    <th>Validación</th>
+                    <th>Vigilante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tri in tris %}
+                <tr>
+                    <td>{{ tri.id }}</td>
+                    <td>{{ tri.fecha }}</td>
+                    <td>{{ tri.hora }}</td>
+                    <td>{{ tri.consecutivo }}</td>                
+                    <td class="text-nowrap">{{ tri.referencia }}</td> 
+                    <td>{{ tri.descripcion }}</td>   
+                    <td>{{ tri.bodega }}</td>
+                    <td>{{ tri.extension }}</td>
+                    <td>{{ tri.unidad_medida }}</td>     
+                    <td>{{ tri.cantidad }}</td>
+                    <td>{{ tri.ubicacion }}</td>
+                    <td>{{ tri.validacion_limpia }}</td>      
+                    <td>{{ tri.vigilante.first_name }}</td>    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

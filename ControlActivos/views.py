@@ -347,19 +347,24 @@ def validarTri(request):
 
                 print(f"Últimos registros válidos para el consecutivo {consecutivo}:")
                 for r in ultimos_registros:
-                    print(f"{r.referencia} => {r.validacion}")
+                    print(f"{r.referencia} => {r.validacion_descripcion}, {r.validacion_proveedor}, etc.")
 
                 todas_correctas = True
                 for val in ultimos_registros:
-                    if "Sin novedad" in val.validacion:
-                        continue
-
-                    valores = [
-                        v.split(':')[1].strip().strip('"').lower()
-                        for v in val.validacion.split(',') if ':' in v
+                    campos_validacion = [
+                        val.validacion_descripcion,
+                        val.validacion_proveedor,
+                        val.validacion_marcacion,
+                        val.validacion_fecha_tri,
+                        val.validacion_sello,
+                        val.validacion_firma_almacen,
+                        val.validacion_firma_proveedor
                     ]
-                    if not all(v in ['correcto', 'correcta'] for v in valores):
-                        todas_correctas = False
+
+                    for campo in campos_validacion:
+                        if str(campo).strip().lower() not in ['correcto', 'correcta']:
+                            todas_correctas = False
+                            break
 
                 if todas_correctas:
                     messages.warning(request, f"El número de consecutivo '{consecutivo}' ya fue registrado completamente.")
@@ -445,23 +450,30 @@ def validarTri(request):
                 )
 
                 ultimos_registros = ValidacionLlantas.objects.filter(id__in=subconsulta)
-                print(f"Ultimos registros del consecutivo {ultimos_registros}")
+                print(f"Últimos registros del consecutivo {ultimos_registros}")
 
                 print(f"Últimos registros válidos para el consecutivo {consecutivo_llantas}:")
                 for r in ultimos_registros:
-                    print(f"{r.referencia} => {r.validacion}")
+                    print(f"{r.referencia} => {r.validacion_descripcion}, {r.validacion_serial}, {r.validacion_quemado}, etc.")
 
                 todas_correctas = True
                 for val in ultimos_registros:
-                    if "Sin novedad" in val.validacion:
-                        continue
-
-                    valores = [
-                        v.split(':')[1].strip().strip('"').lower()
-                        for v in val.validacion.split(',') if ':' in v
+                    campos_validacion = [
+                        val.validacion_descripcion,
+                        val.validacion_serial,
+                        val.validacion_quemado,
+                        val.validacion_vin,
+                        val.validacion_proveedor,
+                        val.validacion_fecha_llantas,
+                        val.validacion_sello,
+                        val.validacion_firma_almacen,
+                        val.validacion_firma_proveedor
                     ]
-                    if not all(v in ['correcto', 'correcta'] for v in valores):
-                        todas_correctas = False
+
+                    for campo in campos_validacion:
+                        if str(campo).strip().lower() not in ['correcto', 'correcta']:
+                            todas_correctas = False
+                            break  # Salir tan pronto haya un error
 
                 if todas_correctas:
                     messages.warning(request, f"El número de consecutivo de llantas '{consecutivo_llantas}' ya fue registrado completamente.")

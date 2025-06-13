@@ -91,97 +91,97 @@
 
 #---------- BUSCAR LA TABLA POR EL CAMPO ------------------------------------------------------------------------
 
-# import pyodbc
-# import os
+import pyodbc
+import os
 
-# def buscar_tabla_por_campo(cursor, nombre_campo):
-#     try:
-#         query_buscar = """
-#         SELECT 
-#             t.name AS tabla,
-#             c.name AS campo
-#         FROM 
-#             sys.tables AS t
-#         INNER JOIN 
-#             sys.columns AS c ON t.object_id = c.object_id
-#         WHERE 
-#             c.name LIKE ?
-#         """
-#         cursor.execute(query_buscar, f'%{nombre_campo}%')
-#         resultados = cursor.fetchall()
+def buscar_tabla_por_campo(cursor, nombre_campo):
+    try:
+        query_buscar = """
+        SELECT 
+            t.name AS tabla,
+            c.name AS campo
+        FROM 
+            sys.tables AS t
+        INNER JOIN 
+            sys.columns AS c ON t.object_id = c.object_id
+        WHERE 
+            c.name LIKE ?
+        """
+        cursor.execute(query_buscar, f'%{nombre_campo}%')
+        resultados = cursor.fetchall()
 
-#         if resultados:
-#             print(f"✅ Tablas que contienen el campo '{nombre_campo}':")
-#             for tabla, campo in resultados:
-#                 print(f"- {tabla} (campo: {campo})")
-#         else:
-#             print(f"⚠️ No se encontró ninguna tabla que tenga el campo '{nombre_campo}'.")
-#     except Exception as e:
-#         print(f"❌ Error al buscar la columna: {e}")
+        if resultados:
+            print(f"✅ Tablas que contienen el campo '{nombre_campo}':")
+            for tabla, campo in resultados:
+                print(f"- {tabla} (campo: {campo})")
+        else:
+            print(f"⚠️ No se encontró ninguna tabla que tenga el campo '{nombre_campo}'.")
+    except Exception as e:
+        print(f"❌ Error al buscar la columna: {e}")
 
-# try:
-#     conn = pyodbc.connect(
-#         'DRIVER={ODBC Driver 17 for SQL Server};'
-#         'SERVER=192.168.90.64;'
-#         'DATABASE=UNOEE;'
-#         'UID=power-bi;'
-#         'PWD=Z1x2c3v4*'
-#     )
+try:
+    conn = pyodbc.connect(
+        'DRIVER={ODBC Driver 17 for SQL Server};'
+        'SERVER=192.168.90.64;'
+        'DATABASE=UNOEE;'
+        'UID=power-bi;'
+        'PWD=Z1x2c3v4*'
+    )
 
-#     cursor = conn.cursor()
+    cursor = conn.cursor()
 
-#     # 👉 Opciones
-#     opcion = input("¿Qué deseas hacer? (1 = Buscar columna / 2 = Ejecutar consulta por consecutivo): ")
+    # 👉 Opciones
+    opcion = input("¿Qué deseas hacer? (1 = Buscar columna / 2 = Ejecutar consulta por consecutivo): ")
 
-#     if opcion == '1':
-#         nombre_campo = input("🔎 Ingresa el nombre del campo que quieres buscar: ")
-#         buscar_tabla_por_campo(cursor, nombre_campo)
+    if opcion == '1':
+        nombre_campo = input("🔎 Ingresa el nombre del campo que quieres buscar: ")
+        buscar_tabla_por_campo(cursor, nombre_campo)
 
-#     elif opcion == '2':
-#         consecutivo = input("🔢 Ingresa el consecutivo que quieres buscar: ")
+    elif opcion == '2':
+        consecutivo = input("🔢 Ingresa el consecutivo que quieres buscar: ")
 
-#         query = """
-#         SELECT 
-#             t470.f470_rowid_item_ext AS Consecutivo,
-#             t470.f470_id_fecha AS Fecha,
-#             t150.f150_descripcion AS Bodega,
-#             v121.v121_referencia AS Referencia,
-#             v121.v121_descripcion AS Descripcion,
-#             t121.f121_id_ext1_detalle AS Extension,
-#             t470.f470_cant_q AS Cantidad,
-#             t470.f470_id_unidad_medida AS UnidadMedida,
-#             t155.f155_descripcion AS Proveedor,
-#             t350.f350_usuario_aprobacion AS CreadoPor
-#         FROM t470_triangulo AS t470
-#         LEFT JOIN t150_mc_bodegas AS t150 ON t470.f470_id_bodega = t150.f150_id_bodega
-#         LEFT JOIN v121 ON t470.f470_id_referencia = v121.v121_id
-#         LEFT JOIN t121_extensiones AS t121 ON t470.f470_id_extension = t121.f121_id
-#         LEFT JOIN t155_proveedores AS t155 ON t470.f470_id_proveedor = t155.f155_id
-#         LEFT JOIN t350_usuarios AS t350 ON t470.f470_usuario_aprobacion = t350.f350_id
-#         WHERE t470.f470_rowid_item_ext = ?
-#         """
+        query = """
+        SELECT 
+            t470.f470_rowid_item_ext AS Consecutivo,
+            t470.f470_id_fecha AS Fecha,
+            t150.f150_descripcion AS Bodega,
+            v121.v121_referencia AS Referencia,
+            v121.v121_descripcion AS Descripcion,
+            t121.f121_id_ext1_detalle AS Extension,
+            t470.f470_cant_q AS Cantidad,
+            t470.f470_id_unidad_medida AS UnidadMedida,
+            t155.f155_descripcion AS Proveedor,
+            t350.f350_usuario_aprobacion AS CreadoPor
+        FROM t470_triangulo AS t470
+        LEFT JOIN t150_mc_bodegas AS t150 ON t470.f470_id_bodega = t150.f150_id_bodega
+        LEFT JOIN v121 ON t470.f470_id_referencia = v121.v121_id
+        LEFT JOIN t121_extensiones AS t121 ON t470.f470_id_extension = t121.f121_id
+        LEFT JOIN t155_proveedores AS t155 ON t470.f470_id_proveedor = t155.f155_id
+        LEFT JOIN t350_usuarios AS t350 ON t470.f470_usuario_aprobacion = t350.f350_id
+        WHERE t470.f470_rowid_item_ext = ?
+        """
 
-#         cursor.execute(query, consecutivo)
-#         rows = cursor.fetchall()
+        cursor.execute(query, consecutivo)
+        rows = cursor.fetchall()
 
-#         if rows:
-#             print("✅ Resultado de la consulta:")
-#             for row in rows:
-#                 print(dict(zip([column[0] for column in cursor.description], row)))
-#         else:
-#             print("⚠️ No se encontraron resultados para ese consecutivo.")
+        if rows:
+            print("✅ Resultado de la consulta:")
+            for row in rows:
+                print(dict(zip([column[0] for column in cursor.description], row)))
+        else:
+            print("⚠️ No se encontraron resultados para ese consecutivo.")
 
-#     else:
-#         print("❗ Opción inválida.")
+    else:
+        print("❗ Opción inválida.")
 
-# except Exception as e:
-#     print("❌ Error al ejecutar la consulta:")
-#     print(e)
+except Exception as e:
+    print("❌ Error al ejecutar la consulta:")
+    print(e)
 
-# finally:
-#     if 'conn' in locals():
-#         conn.close()
-#         print("🔌 Conexión cerrada.")
+finally:
+    if 'conn' in locals():
+        conn.close()
+        print("🔌 Conexión cerrada.")
 
 
 
@@ -513,33 +513,33 @@
 #-------------- MIGRACIONES DE DJANGO EN SIESA -----------------------------------------------------------------
 
 
-import pyodbc
+# import pyodbc
 
-# Conexión a SQL Server
-conn = pyodbc.connect(
-    'DRIVER={ODBC Driver 17 for SQL Server};'
-    'SERVER=192.168.90.64;'
-    'DATABASE=UNOEE;'
-    'UID=power-bi;'
-    'PWD=Z1x2c3v4*'
-)
+# # Conexión a SQL Server
+# conn = pyodbc.connect(
+#     'DRIVER={ODBC Driver 17 for SQL Server};'
+#     'SERVER=192.168.90.64;'
+#     'DATABASE=UNOEE;'
+#     'UID=power-bi;'
+#     'PWD=Z1x2c3v4*'
+# )
 
-cursor = conn.cursor()
+# cursor = conn.cursor()
 
-# Consulta para ver si existen tablas de Django
-cursor.execute("""
-SELECT name 
-FROM sys.tables 
-WHERE name LIKE 'django_%' OR name LIKE 'auth_%'
-""")
+# # Consulta para ver si existen tablas de Django
+# cursor.execute("""
+# SELECT name 
+# FROM sys.tables 
+# WHERE name LIKE 'django_%' OR name LIKE 'auth_%'
+# """)
 
-tables = cursor.fetchall()
+# tables = cursor.fetchall()
 
-if tables:
-    print("⚠ Se encontraron tablas de migraciones de Django en la base de datos SQL Server:")
-    for table in tables:
-        print("-", table[0])
-else:
-    print("✅ No se encontraron tablas de migraciones de Django. No se han ejecutado migraciones.")
+# if tables:
+#     print("⚠ Se encontraron tablas de migraciones de Django en la base de datos SQL Server:")
+#     for table in tables:
+#         print("-", table[0])
+# else:
+#     print("✅ No se encontraron tablas de migraciones de Django. No se han ejecutado migraciones.")
 
-conn.close()
+# conn.close()

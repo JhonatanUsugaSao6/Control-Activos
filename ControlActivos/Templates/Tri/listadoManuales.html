@@ -28,7 +28,7 @@
                     <td>{{ tri.numero_manual }}</td>                
                     <td>
                         {% if tri.ruta_imagen %}
-                            <img src="{{ tri.ruta_imagen.url }}" style="width: 200px;">
+                            <img src="{{ tri.ruta_imagen.url }}" style="max-width: 150px; max-height: 150px">
                         {% else %}
                             No hay imagen
                         {% endif %}

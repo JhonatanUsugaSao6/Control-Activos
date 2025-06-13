@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from ControlActivos.views import login_view, validarTri, logout_view, listadoValidaciones, listadoValidacionesManuales
+from ControlActivos.views import login_view, validarTri, logout_view, listadoValidaciones, listadoValidacionesManuales, filtrarConsecutivo, listadoLlantas, filtrarConsecutivoLlantas
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -25,8 +25,11 @@ urlpatterns = [
     path('', login_view, name='login'),
     path('Tri/validarTri/', validarTri, name='validarTri'),
     path('Tri/listadoTri/', listadoValidaciones, name='listadoTri'),
+    path('Tri/listadoLlantas/', listadoLlantas, name='listadoLlantas'),
     path('Tri/listadoManuales/', listadoValidacionesManuales, name='listadoManuales'),
     path('logout/', logout_view, name='logout'),
+    path('ajax/filtrarConsecutivo/', filtrarConsecutivo, name='filtrarConsecutivo'),
+    path('ajax/filtrarConsecutivoLlantas/', filtrarConsecutivoLlantas, name='filtrarConsecutivoLlantas'),
 ] 
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Listado TRI{% endblock %}
+{% block title %}Listado Llantas{% endblock %}
 
 {% block content %}
 
 <div class="container-fluid">
-    <h2 class="text-center mt-5 mb-5" style="color:black ;">Listado de Registros TRI</h2>
+    <h2 class="text-center mt-5 mb-5" style="color:black ;">Listado de Registros Llantas</h2>
 
     <form action="" method="get">
         <div class="col-lg-3 col-md-4 col-sm-4 mb-3">
@@ -29,31 +29,33 @@
                     <th>Consecutivo</th>
                     <th>Referencia</th>
                     <th>Descripción</th>
+                    <th>Serial</th>
+                    <th>Quemado</th>
+                    <th>Vin</th>
                     <th>Bodega</th>
                     <th>Extensión</th>
-                    <th>Unidad</th>
-                    <th>Cantidad</th>
                     <th>Ubicación</th>
                     <th>Validación</th>
                     <th>Vigilante</th>
                 </tr>
             </thead>
             <tbody id="tabla-tris">
-                {% for tri in tris %}
+                {% for llanta in llantas %}
                 <tr>
-                    <td>{{ tri.id }}</td>
-                    <td>{{ tri.fecha }}</td>
-                    <td>{{ tri.hora }}</td>
-                    <td>{{ tri.consecutivo }}</td>                
-                    <td class="text-nowrap">{{ tri.referencia }}</td> 
-                    <td>{{ tri.descripcion }}</td>   
-                    <td>{{ tri.bodega }}</td>
-                    <td>{{ tri.extension }}</td>
-                    <td>{{ tri.unidad_medida }}</td>     
-                    <td>{{ tri.cantidad }}</td>
-                    <td>{{ tri.ubicacion }}</td>
-                    <td>{{ tri.validacion_limpia }}</td>      
-                    <td>{{ tri.vigilante.first_name }}</td>    
+                    <td>{{ llanta.id }}</td>
+                    <td>{{ llanta.fecha }}</td>
+                    <td>{{ llanta.hora }}</td>
+                    <td>{{ llanta.consecutivo }}</td>                
+                    <td class="text-nowrap">{{ llanta.referencia }}</td> 
+                    <td>{{ llanta.descripcion }}</td> 
+                    <td>{{ llanta.serial }}</td>   
+                    <td>{{ llanta.quemado }}</td> 
+                    <td>{{ llanta.vin }}</td> 
+                    <td>{{ llanta.bodega }}</td>
+                    <td>{{ llanta.extension }}</td>
+                    <td>{{ llanta.ubicacion }}</td>
+                    <td>{{ llanta.validacion_limpia }}</td>      
+                    <td>{{ llanta.vigilante.first_name }}</td>    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -66,7 +68,7 @@
     document.getElementById('filtro').addEventListener('keyup', function() {
         const valor = this.value;
     
-        fetch(`/ajax/filtrarConsecutivo/?filtro=${encodeURIComponent(valor)}`)
+        fetch(`/ajax/filtrarConsecutivoLlantas/?filtro=${encodeURIComponent(valor)}`)
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById('tabla-tris');
@@ -81,10 +83,11 @@
                             <td>${tri.consecutivo}</td>
                             <td class="text-nowrap">${tri.referencia}</td>
                             <td>${tri.descripcion}</td>
+                            <td>${tri.serial}</td>
+                            <td>${tri.quemado}</td>
+                            <td>${tri.vin}</td>
                             <td>${tri.bodega}</td>
                             <td>${tri.extension}</td>
-                            <td>${tri.unidad_medida}</td>
-                            <td>${tri.cantidad}</td>
                             <td>${tri.ubicacion}</td>
                             <td>${tri.validacion_limpia}</td>
                             <td>${tri.vigilante}</td>

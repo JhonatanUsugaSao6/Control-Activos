@@ -2,8 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class ValidacionTri(models.Model):
-    fecha = models.DateField(auto_now_add=True)
-    hora = models.TimeField(auto_now_add=True)
+    fecha = models.DateField()
+    hora = models.TimeField()
     consecutivo = models.CharField(max_length=15)
     referencia = models.CharField(max_length=15)
     descripcion = models.CharField(max_length=100)
@@ -30,8 +30,8 @@ class ValidacionTri(models.Model):
         
 
 class ValidacionLlantas(models.Model):
-    fecha = models.DateField(auto_now_add=True)
-    hora = models.TimeField(auto_now_add=True)
+    fecha = models.DateField()
+    hora = models.TimeField()
     consecutivo = models.CharField(max_length=15)
     referencia = models.CharField(max_length=15)
     descripcion = models.CharField(max_length=100)
@@ -60,8 +60,8 @@ class ValidacionLlantas(models.Model):
 
 
 class ValidacionManual(models.Model):
-    fecha = models.DateField(auto_now_add=True)
-    hora = models.TimeField(auto_now_add=True)
+    fecha = models.DateField()
+    hora = models.TimeField()
     numero_manual = models.CharField(max_length=100)
     ruta_imagen = models.ImageField(upload_to='validacionManual/')
     

@@ -9,6 +9,7 @@ from ControlActivos.models import ValidacionTri, ValidacionManual, ValidacionLla
 import logging
 from django.db.models import Max
 from django.http import JsonResponse
+from django.utils.timezone import localtime
 
 
 
@@ -69,9 +70,13 @@ def validarTri(request):
             firma_almacen = request.POST.get("firma_almacen")
             firma_proveedor = request.POST.get("firma_proveedor")
             sello = request.POST.get("sello")
+            
+            ahora = localtime()
 
             if numero_manual and foto_manual and firma_almacen and firma_proveedor and sello:
                 ValidacionManual.objects.create(
+                    fecha=ahora.date(),        
+                    hora=ahora.time(),        
                     numero_manual=numero_manual,
                     ruta_imagen=foto_manual,
                     validacion_firma_almacen=firma_almacen,
@@ -150,7 +155,11 @@ def validarTri(request):
                         logger.debug(f"Datos obtenidos de la DB para {referencia}")
                         logger.debug(f"  Bodega: {bodega}, Cantidad: {cantidad}, Unidad: {unidad_medida}, Ubicación: {ubicacion}, Desc: {descripcion}, Ext: {extension}")
                         
+                        ahora = localtime()
+                        
                         validacion_obj = ValidacionTri(
+                            fecha=ahora.date(),               
+                            hora=ahora.time(), 
                             consecutivo=consecutivo,
                             referencia=referencia,
                             descripcion=descripcion or "",
@@ -271,7 +280,11 @@ def validarTri(request):
                         logger.debug(f"Datos obtenidos de la DB para el quemado {quemado}")
                         print(f"Datos obtenidos en la BD para el quemado {quemado}")
 
+                        ahora = localtime()
+                        
                         validacion_obj_llantas = ValidacionLlantas(
+                            fecha=ahora.date(),               
+                            hora=ahora.time(),
                             consecutivo=consecutivo_llantas,
                             referencia=referencia,
                             descripcion=descripcion or "",

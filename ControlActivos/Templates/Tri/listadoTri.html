@@ -35,6 +35,7 @@
                     <th>Cantidad</th>
                     <th>Ubicación</th>
                     <th>Validación</th>
+                    <th>Evidencia</th>
                     <th>Vigilante</th>
                 </tr>
             </thead>
@@ -42,7 +43,7 @@
                 {% for tri in tris %}
                 <tr>
                     <td>{{ tri.id }}</td>
-                    <td>{{ tri.fecha }}</td>
+                    <td>{{ tri.fecha|date:"d/m/Y"}}</td>
                     <td>{{ tri.hora }}</td>
                     <td>{{ tri.consecutivo }}</td>                
                     <td class="text-nowrap">{{ tri.referencia }}</td> 
@@ -52,7 +53,71 @@
                     <td>{{ tri.unidad_medida }}</td>     
                     <td>{{ tri.cantidad }}</td>
                     <td>{{ tri.ubicacion }}</td>
-                    <td>{{ tri.validacion_limpia }}</td>      
+                    <td>{{ tri.validacion_limpia }}</td>
+                    <td>
+                        {% if tri.evidencias %}
+                            <button type="button" class="btn btn-sm btn-primary boton" data-bs-toggle="modal" data-bs-target="#modalEvidencias{{ tri.id }}">
+                                 Evidencias ({{ tri.evidencias|length }})
+                            </button>
+                    
+                         
+                            <div class="modal fade" id="modalEvidencias{{ tri.id }}" tabindex="-1" aria-labelledby="modalLabel{{ tri.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+                                    <div class="modal-content border-0" style="font-family: 'Segoe UI', sans-serif;">
+                            
+                                        <div class="modal-header text-white" style="background-color: #6ba43a;">
+                                            <h5 class="modal-title fw-bold" id="modalLabel{{ tri.id }}">
+                                                Evidencias del consecutivo {{ tri.consecutivo }}
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                        </div>
+                            
+                                        <!-- Cuerpo con tarjetas visuales -->
+                                        <div class="modal-body bg-light">
+                                            {% if tri.evidencias %}
+                                                <div class="row justify-content-center g-4">
+                                                    {% for evidencia in tri.evidencias %}
+                                                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                                                            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden position-relative">
+                            
+                                                                <div class="position-relative">
+                                                                    <img src="{{ evidencia.ruta.url }}"
+                                                                         class="w-100 img-fluid"
+                                                                         style="height: 220px; object-fit: cover; transition: transform 0.3s;"
+                                                                         onmouseover="this.style.transform='scale(1.05)'"
+                                                                         onmouseout="this.style.transform='scale(1)'">
+                            
+                                                            
+                                                                </div>
+                            
+                                                                <div class="card-body text-center">
+                                                                    <h6 class="text-dark fw-semibold mb-1">{{ evidencia.tipo }}</h6>
+                                                                    <small class="text-muted">{{ evidencia.fecha_formateada }}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-warning text-center mt-4">
+                                                    No hay evidencias para este registro.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                            
+                                        <!-- Footer simple -->
+                                        <div class="modal-footer bg-white border-top">
+                                            <button type="button" class="btn btn-success px-4 py-2" style="background-color: #6ba43a; border-color: #6ba43a;" data-bs-dismiss="modal">
+                                                Cerrar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            No hay evidencias
+                        {% endif %}
+                    </td>  
                     <td>{{ tri.vigilante.first_name }}</td>    
                 </tr>
                 {% endfor %}
@@ -60,6 +125,68 @@
         </table>
     </div>
 </div>
+
+
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center mt-4">
+
+        {# Botón "Anterior" #}
+        {% if tris.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ tris.previous_page_number }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}">Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Anterior</span>
+            </li>
+        {% endif %}
+
+        {# Primera página y "..." si es necesario #}
+        {% if tris.number > 3 %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}">1</a>
+            </li>
+            {% if tris.number > 4 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Páginas cercanas a la actual #}
+        {% for num in tris.paginator.page_range %}
+            {% if num >= tris.number|add:'-1' and num <= tris.number|add:'1' %}
+                {% if tris.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {# Última página y "..." si es necesario #}
+        {% if tris.number < tris.paginator.num_pages|add:'-2' %}
+            {% if tris.number < tris.paginator.num_pages|add:'-3' %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ tris.paginator.num_pages }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}">{{ tris.paginator.num_pages }}</a>
+            </li>
+        {% endif %}
+
+        {# Botón "Siguiente" #}
+        {% if tris.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ tris.next_page_number }}{% if request.GET.filtro %}&filtro={{ request.GET.filtro }}{% endif %}">Siguiente</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Siguiente</span>
+            </li>
+        {% endif %}
+
+    </ul>
+</nav>
 
 
 <script>
@@ -87,6 +214,7 @@
                             <td>${tri.cantidad}</td>
                             <td>${tri.ubicacion}</td>
                             <td>${tri.validacion_limpia}</td>
+                            <td>${tri.evidencia_tri.url}</td>
                             <td>${tri.vigilante}</td>
                         </tr>
                     `;

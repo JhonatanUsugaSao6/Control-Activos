@@ -21,7 +21,7 @@ class ValidacionTri(models.Model):
     validacion_sello = models.CharField(max_length=50)
     validacion_firma_almacen = models.CharField(max_length=50)
     validacion_firma_proveedor = models.CharField(max_length=50)
-    
+    evidencia_tri = models.ImageField(upload_to='validacionTri/')
     vigilante = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
@@ -48,14 +48,39 @@ class ValidacionLlantas(models.Model):
     validacion_vin = models.CharField(max_length=50)
     validacion_proveedor = models.CharField(max_length=50)
     validacion_fecha_llantas = models.CharField(max_length=50)
+    validacion_documento_anexo = models.CharField(max_length=50)
     validacion_sello = models.CharField(max_length=50)
     validacion_firma_almacen = models.CharField(max_length=50)
     validacion_firma_proveedor = models.CharField(max_length=50)
-    
     vigilante = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
         db_table = "validacion_llantas"
+
+
+
+
+class EvidenciaTris(models.Model):
+    tipo = models.CharField(max_length=50) 
+    ruta = models.FileField(upload_to='evidenciasTris/')
+    fecha = models.DateField()
+    tri = models.ForeignKey(ValidacionTri, on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = "evidenciaTris"
+
+
+
+class EvidenciaLlantas(models.Model):
+    tipo = models.CharField(max_length=50) 
+    ruta = models.FileField(upload_to='evidenciasLlantas/')
+    fecha = models.DateField()
+    llanta = models.ForeignKey(ValidacionLlantas, on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = "evidenciaLlantas"
+
+
 
 
 
@@ -64,9 +89,12 @@ class ValidacionManual(models.Model):
     hora = models.TimeField()
     numero_manual = models.CharField(max_length=100)
     ruta_imagen = models.ImageField(upload_to='validacionManual/')
-    
+    motivo_retiro = models.CharField(max_length=50)
+    concepto_salida = models.CharField(max_length=50)
     validacion_sello = models.CharField(max_length=50)
+    validacion_tachones_enmendaduras = models.CharField(max_length=50)
     validacion_firma_almacen = models.CharField(max_length=50)
+    validacion_firma_autorizacion = models.CharField(max_length=50)
     validacion_firma_proveedor = models.CharField(max_length=50)
     
     vigilante = models.ForeignKey(User, on_delete=models.CASCADE)

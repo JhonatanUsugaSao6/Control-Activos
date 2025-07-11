@@ -5,11 +5,13 @@ from django.contrib import messages
 from django.http import HttpResponseServerError
 from django.contrib.auth.decorators import login_required
 from django.db import connections
-from ControlActivos.models import ValidacionTri, ValidacionManual, ValidacionLlantas
+from ControlActivos.models import ValidacionTri, ValidacionManual, ValidacionLlantas, EvidenciaLlantas, EvidenciaTris
 import logging
 from django.db.models import Max
 from django.http import JsonResponse
 from django.utils.timezone import localtime
+from django.core.paginator import Paginator
+
 
 
 
@@ -27,7 +29,7 @@ def obtener_datos_validacion(i, request):
         "Fecha": request.POST.get("fecha"),
         "Descripción": request.POST.get(f"motivo_descripcion_{i}"),
         "Cantidad": request.POST.get(f"motivo_cantidad_{i}"),
-        "Proveedor": request.POST.get(f"motivo_ubicacion_{i}"),
+        "Proveedor": request.POST.get("cumple_proveedor"),
         "Sello": request.POST.get("sello"),
         "Firma Almacén": request.POST.get("firma_almacen"),
         "Firma Proveedor": request.POST.get("firma_proveedor"),
@@ -40,7 +42,7 @@ def obtener_datos_validacion_llantas(i, request):
     return {
         "Fecha": request.POST.get("fecha"),
         "Descripción": request.POST.get(f"motivo_descripcion_{i}"),
-        "Proveedor": request.POST.get(f"motivo_ubicacion_{i}"),
+        "Proveedor": request.POST.get(f"cumple_proveedor"),
         "Sello": request.POST.get("sello"),
         "Firma Almacén": request.POST.get("firma_almacen"),
         "Firma Proveedor": request.POST.get("firma_proveedor"),
@@ -48,6 +50,7 @@ def obtener_datos_validacion_llantas(i, request):
         "Serial": request.POST.get(f"motivo_serial_{i}"),
         "Quemado": request.POST.get(f"motivo_quemado_{i}"),
         "VIN": request.POST.get(f"motivo_vin_{i}"),
+        "Documento Anexo": request.POST.get(f"documento_anexo"),
     }
 
 
@@ -66,22 +69,32 @@ def validarTri(request):
 
         if tipo == "manual":
             numero_manual = request.POST.get("numero_manual", "").strip()
+            concepto_salida = request.POST.get("concepto_salida")            
+            motivo_retiro = request.POST.get("motivo_retiro")               
             foto_manual = request.FILES.get("foto_manual")
             firma_almacen = request.POST.get("firma_almacen")
+            firma_autorizacion = request.POST.get("firma_autorizacion")
+
             firma_proveedor = request.POST.get("firma_proveedor")
             sello = request.POST.get("sello")
+            tachones_enmendaduras = request.POST.get("tachones_enmendaduras")
             
             ahora = localtime()
 
-            if numero_manual and foto_manual and firma_almacen and firma_proveedor and sello:
+            if numero_manual and foto_manual and firma_almacen and firma_proveedor and sello and concepto_salida:
                 ValidacionManual.objects.create(
                     fecha=ahora.date(),        
                     hora=ahora.time(),        
                     numero_manual=numero_manual,
+                    concepto_salida=concepto_salida,
                     ruta_imagen=foto_manual,
+                    motivo_retiro=motivo_retiro,
                     validacion_firma_almacen=firma_almacen,
+                    validacion_firma_autorizacion=firma_autorizacion,
                     validacion_firma_proveedor=firma_proveedor,
                     validacion_sello=sello,
+                    validacion_tachones_enmendaduras=tachones_enmendaduras,
+                    
                     vigilante=request.user
                 )
                 messages.success(request, "Salida manual guardada exitosamente.")
@@ -101,6 +114,8 @@ def validarTri(request):
                 total_items = int(total_items_raw)
                 logger.debug(f"Total de ítems a validar: {total_items}")
 
+                foto_tri = request.FILES.get("foto_tri")
+                
                 validaciones = []
 
                 consecutivo = request.POST.get("consecutivo", "").strip()
@@ -176,22 +191,60 @@ def validarTri(request):
                             validacion_sello=datos_val.get("Sello"),
                             validacion_firma_almacen=datos_val.get("Firma Almacén"),
                             validacion_firma_proveedor=datos_val.get("Firma Proveedor"),
+                            evidencia_tri=foto_tri,
+
                             vigilante=request.user
                         )
                         
                         validaciones.append(validacion_obj)
-                        
-                    else:
-                        logger.debug(f"⚠ No se encontró información en la BD para la referencia '{referencia}' con consecutivo '{consecutivo}'")
-
+                
+                
                 if validaciones:
-                    logger.debug(f"Total de objetos a guardar: {len(validaciones)}")
-                    
                     with transaction.atomic():
                         ValidacionTri.objects.bulk_create(validaciones, batch_size=100)
+
+                        nuevas_validaciones = list(
+                            ValidacionTri.objects.filter(
+                                consecutivo=consecutivo,
+                                vigilante=request.user
+                            ).order_by('-id')[:total_items]
+                        )
+                        nuevas_validaciones.reverse()
+
+                        evidencias = []
+                        for key, archivo in request.FILES.items():
+                            if not key.startswith("foto_"):
+                                continue
+
+                            partes = key.split("_")
+                            if len(partes) < 3:
+                                continue
+
+                            tipo = partes[1]  # ejemplo: fecha, vin, etc.
+                            categoria = partes[2]
+
+                            try:
+                                if categoria == "general":
+                                    # Evidencias generales: puedes usar la primera validación como referencia
+                                    index = 0
+                                else:
+                                    index = int(categoria)
+                            except ValueError:
+                                continue
+
+                            if 0 <= index < len(nuevas_validaciones):
+                                evidencias.append(EvidenciaTris(
+                                    ruta=archivo,
+                                    fecha=localtime().date(),
+                                    tipo=tipo.capitalize(),
+                                    tri=nuevas_validaciones[index]
+                                ))
+
+                        if evidencias:
+                            EvidenciaTris.objects.bulk_create(evidencias)                        
+                        
                     messages.success(request, "Validaciones guardadas exitosamente.")
                 else:
-                    logger.debug("⚠ No hay validaciones para guardar.")
                     messages.warning(request, "No se encontraron datos válidos para guardar.")
 
                 return redirect('validarTri')    
@@ -203,62 +256,47 @@ def validarTri(request):
                 logger.debug(f"❌ Error inesperado: {e}")
                 messages.error(request, f"Error al guardar validaciones: {e}")
                 return redirect('validarTri')
-
-
         
-        #Salida de llantas
+        
+        
         elif tipo_salida == "consecutivo llantas":
             try:
                 total_items_raw = request.POST.get("total_items", "0")
                 if not total_items_raw.isdigit():
                     raise ValueError(f"Valor no numérico recibido: {total_items_raw}")
                 total_items = int(total_items_raw)
-                logger.debug(f"Total de ítems a validar: {total_items}")
-                print(f"Total items a validar {total_items}")
 
                 validacionesLlantas = []
                 consecutivo_llantas = request.POST.get("consecutivo_llantas", "").strip()
-                logger.debug(f"Consecutivo llantas recibido: {consecutivo_llantas}")
-                print(f"Consecutivo llantas recibido para guardar {consecutivo_llantas}")
 
                 for i in range(total_items):
                     quemado = request.POST.get(f"quemado{i}", "").strip()
-                    logger.debug(f"Quemado recibido: {quemado}")
-                    print(f"Quemado obtenido {quemado}")
-
                     datos_val = obtener_datos_validacion_llantas(i, request)
 
                     with connections['sql'].cursor() as cursor:
                         cursor.execute("""
                             SELECT
-                                bod.f150_descripcion AS bodega_descripcion,
-                                ubic.f155_descripcion AS ubicacion_descripcion,
+                                bod.f150_descripcion,
+                                ubic.f155_descripcion,
                                 v.v121_descripcion,
                                 v.v121_id_ext1_detalle,
-                                srl.f417_campo_1,     
-                                srl.f417_id,          
-                                v.v121_referencia    
+                                srl.f417_campo_1,
+                                srl.f417_id,
+                                v.v121_referencia
                             FROM t470_cm_movto_invent AS inv
-                            INNER JOIN t350_co_docto_contable AS cont 
-                                ON inv.f470_rowid_docto = cont.f350_rowid
-                            LEFT JOIN t150_mc_bodegas AS bod 
-                                ON inv.f470_rowid_bodega = bod.f150_rowid
+                            INNER JOIN t350_co_docto_contable AS cont ON inv.f470_rowid_docto = cont.f350_rowid
+                            LEFT JOIN t150_mc_bodegas AS bod ON inv.f470_rowid_bodega = bod.f150_rowid
                             LEFT JOIN (
                                 SELECT f155_id, MIN(f155_descripcion) AS f155_descripcion
                                 FROM t155_mc_ubicacion_auxiliares
                                 GROUP BY f155_id
-                            ) AS ubic 
-                                ON inv.f470_id_ubicacion_aux = ubic.f155_id
-                            LEFT JOIN v121 AS v 
-                                ON inv.f470_rowid_item_ext = v.v121_rowid_item_ext
-                            INNER JOIN t479_cm_movto_seriales AS ms 
-                                ON ms.f479_rowid_movto_inv = inv.f470_rowid
-                            INNER JOIN t417_cm_seriales AS srl 
-                                ON ms.f479_rowid_serial = srl.f417_rowid
-
+                            ) AS ubic ON inv.f470_id_ubicacion_aux = ubic.f155_id
+                            LEFT JOIN v121 AS v ON inv.f470_rowid_item_ext = v.v121_rowid_item_ext
+                            INNER JOIN t479_cm_movto_seriales AS ms ON ms.f479_rowid_movto_inv = inv.f470_rowid
+                            INNER JOIN t417_cm_seriales AS srl ON ms.f479_rowid_serial = srl.f417_rowid
                             WHERE cont.f350_consec_docto = %s
                             AND srl.f417_campo_2 = %s
-                            AND inv.f470_id_cia = 4 
+                            AND inv.f470_id_cia = 4
                             AND cont.f350_id_tipo_docto = 'TRI'
                             AND inv.f470_ind_naturaleza = 1
                             AND bod.f150_descripcion IN (
@@ -272,18 +310,13 @@ def validarTri(request):
                             )
                             AND srl.f417_id_cfg_serial = 1
                         """, [consecutivo_llantas, quemado])
-
                         row = cursor.fetchone()
 
                     if row:
                         bodega, ubicacion, descripcion, extension, vin, serial, referencia = row
-                        logger.debug(f"Datos obtenidos de la DB para el quemado {quemado}")
-                        print(f"Datos obtenidos en la BD para el quemado {quemado}")
-
                         ahora = localtime()
-                        
                         validacion_obj_llantas = ValidacionLlantas(
-                            fecha=ahora.date(),               
+                            fecha=ahora.date(),
                             hora=ahora.time(),
                             consecutivo=consecutivo_llantas,
                             referencia=referencia,
@@ -300,37 +333,69 @@ def validarTri(request):
                             validacion_vin=datos_val.get("VIN"),
                             validacion_proveedor=datos_val.get("Proveedor"),
                             validacion_fecha_llantas=datos_val.get("Fecha"),
+                            validacion_documento_anexo=datos_val.get("Documento Anexo"),
                             validacion_sello=datos_val.get("Sello"),
                             validacion_firma_almacen=datos_val.get("Firma Almacén"),
-                            validacion_firma_proveedor=datos_val.get("Firma Proveedor",),
+                            validacion_firma_proveedor=datos_val.get("Firma Proveedor"),
                             vigilante=request.user
                         )
                         validacionesLlantas.append(validacion_obj_llantas)
-                    else:
-                        logger.debug(f"⚠ No se encontró información en la BD para el quemado '{quemado}' con consecutivo '{consecutivo_llantas}'")
-                        print(f"⚠ No se encontró información en la BD para el quemado '{quemado}' con consecutivo '{consecutivo_llantas}'")
 
                 if validacionesLlantas:
-                    print(f"Totak objetos a guardar {len(validacionesLlantas)}")
-                    logger.debug(f"Total de objetos a guardar: {len(validacionesLlantas)}")
-                    print(f"Total de objetos a guardar: {len(validacionesLlantas)}")
                     with transaction.atomic():
                         ValidacionLlantas.objects.bulk_create(validacionesLlantas, batch_size=100)
+
+                        nuevas_validaciones = list(
+                            ValidacionLlantas.objects.filter(
+                                consecutivo=consecutivo_llantas,
+                                vigilante=request.user
+                            ).order_by('-id')[:total_items]
+                        )
+                        nuevas_validaciones.reverse()
+
+                        evidencias = []
+                        for key, archivo in request.FILES.items():
+                            if not key.startswith("foto_"):
+                                continue
+
+                            partes = key.split("_")
+                            if len(partes) < 3:
+                                continue
+
+                            tipo = partes[1]  # ejemplo: fecha, vin, etc.
+                            categoria = partes[2]
+
+                            try:
+                                if categoria == "general":
+                                    # Evidencias generales: puedes usar la primera validación como referencia
+                                    index = 0
+                                else:
+                                    index = int(categoria)
+                            except ValueError:
+                                continue
+
+                            if 0 <= index < len(nuevas_validaciones):
+                                evidencias.append(EvidenciaLlantas(
+                                    ruta=archivo,
+                                    fecha=localtime().date(),
+                                    tipo=tipo.capitalize(),
+                                    llanta=nuevas_validaciones[index]
+                                ))
+
+                        if evidencias:
+                            EvidenciaLlantas.objects.bulk_create(evidencias)
+
                     messages.success(request, "Validaciones llantas guardadas exitosamente.")
                 else:
-                    logger.debug("⚠ No hay validaciones llantas para guardar.")
-                    print("⚠ No hay validaciones llantas para guardar.")
                     messages.warning(request, "No se encontraron datos válidos para guardar.")
-                return redirect('validarTri')  
-                
+
+                return redirect('validarTri')
+
             except ValueError as e:
-                logger.debug(f"❌ Error de conversión de número: {e}")
                 return HttpResponseServerError(f"<h1>Error: total_items no es un número válido.</h1><p>{e}</p>")
             except Exception as e:
-                logger.debug(f"❌ Error inesperado: {e}")
                 messages.error(request, f"Error al guardar validaciones llantas: {e}")
                 return redirect('validarTri')
-        
         
         
 
@@ -451,7 +516,8 @@ def validarTri(request):
 
             # Verificamos si existen registros para ese consecutivo
             existe = ValidacionLlantas.objects.filter(consecutivo=consecutivo_llantas).exists()
-            print(f"La consulta exitse muestra {existe}")
+            print(f"La consulta existe muestra {existe}")
+
             if existe:
                 # Subconsulta para obtener el último registro por referencia
                 subconsulta = (
@@ -469,28 +535,9 @@ def validarTri(request):
                 for r in ultimos_registros:
                     print(f"{r.referencia} => {r.validacion_descripcion}, {r.validacion_serial}, {r.validacion_quemado}, etc.")
 
-                todas_correctas = True
-                for val in ultimos_registros:
-                    campos_validacion = [
-                        val.validacion_descripcion,
-                        val.validacion_serial,
-                        val.validacion_quemado,
-                        val.validacion_vin,
-                        val.validacion_proveedor,
-                        val.validacion_fecha_llantas,
-                        val.validacion_sello,
-                        val.validacion_firma_almacen,
-                        val.validacion_firma_proveedor
-                    ]
-
-                    for campo in campos_validacion:
-                        if str(campo).strip().lower() not in ['correcto', 'correcta']:
-                            todas_correctas = False
-                            break  # Salir tan pronto haya un error
-
-                if todas_correctas:
-                    messages.warning(request, f"El número de consecutivo de llantas '{consecutivo_llantas}' ya fue registrado completamente.")
-                    return render(request, 'Tri/formulario.html', {'resultado': [], 'consecutivo': consecutivo_llantas})
+                # Mostrar mensaje siempre que el consecutivo exista
+                messages.warning(request, f"El número de consecutivo de llantas '{consecutivo_llantas}' ya fue registrado previamente.")
+                return render(request, 'Tri/formulario.html', {'resultado': [], 'consecutivo': consecutivo_llantas})
 
 
             
@@ -585,8 +632,17 @@ def validarTri(request):
 
 @login_required
 def listadoValidaciones(request):   
-    tris = ValidacionTri.objects.all()
-    for tri in tris:
+    filtro = request.GET.get("filtro", "")
+    tris_qs = ValidacionTri.objects.all().order_by("-id")
+
+    if filtro:
+        tris_qs = tris_qs.filter(consecutivo__icontains=filtro)
+
+    paginator = Paginator(tris_qs, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    for tri in page_obj:
         validaciones = []
         campos_validacion = {
             "Descripción": tri.validacion_descripcion,
@@ -606,15 +662,25 @@ def listadoValidaciones(request):
 
         tri.validacion_limpia = ', '.join(validaciones) if validaciones else "Sin novedad"
 
-    return render(request, "Tri/listadoTri.html", {'tris': tris})
+        # Obtener evidencias relacionadas y agregar fecha formateada
+        evidencias = EvidenciaTris.objects.filter(tri=tri)
+        for evidencia in evidencias:
+            evidencia.fecha_formateada = evidencia.fecha.strftime("%d/%m/%Y")
+        tri.evidencias = evidencias
+
+    return render(request, "Tri/listadoTri.html", {'tris': page_obj})
+
 
 
 @login_required
-def listadoLlantas(request):   
-    llantas = ValidacionLlantas.objects.all()
+def listadoLlantas(request):
+    llantas_qs = ValidacionLlantas.objects.all().order_by("-id")
 
-    for llanta in llantas:
-        # Agrupa todas las validaciones en una lista (las que NO son "Correcto")
+    paginator = Paginator(llantas_qs, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    for llanta in page_obj:
         validaciones = []
         campos_validacion = {
             "Descripción": llanta.validacion_descripcion,
@@ -623,6 +689,7 @@ def listadoLlantas(request):
             "VIN": llanta.validacion_vin,
             "Proveedor": llanta.validacion_proveedor,
             "Fecha": llanta.validacion_fecha_llantas,
+            "Documento Anexo": llanta.validacion_documento_anexo,
             "Sello": llanta.validacion_sello,
             "Firma almacén": llanta.validacion_firma_almacen,
             "Firma proveedor": llanta.validacion_firma_proveedor,
@@ -634,14 +701,43 @@ def listadoLlantas(request):
 
         llanta.validacion_limpia = ', '.join(validaciones) if validaciones else "Sin novedad"
 
-    return render(request, "Tri/listadoLlantas.html", {'llantas': llantas})
+        # Cargar evidencias asociadas con fecha formateada
+        evidencias = EvidenciaLlantas.objects.filter(llanta=llanta)
+        for evidencia in evidencias:
+            evidencia.fecha_formateada = evidencia.fecha.strftime("%d/%m/%Y")
+        llanta.evidencias = evidencias
 
+    return render(request, "Tri/listadoLlantas.html", {'llantas': page_obj})
 
 
 @login_required
-def listadoValidacionesManuales(request):   
-    tris = ValidacionManual.objects.all()
-    return render(request, "Tri/listadoManuales.html", {'tris': tris})
+def listadoValidacionesManuales(request):
+    tris_qs = ValidacionManual.objects.all().order_by("-id")
+    paginator = Paginator(tris_qs, 20)  # 20 registros por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Procesar validaciones de cada registro
+    for tri in page_obj:
+        validaciones = []
+        campos_validacion = {
+            "Motivo Retiro": tri.motivo_retiro,
+            "Sello": tri.validacion_sello,
+            "Tachones Enmendaduras": tri.validacion_tachones_enmendaduras,
+            "Firma almacén": tri.validacion_firma_almacen,
+            "Firma autorización": tri.validacion_firma_autorizacion,
+            "Firma proveedor": tri.validacion_firma_proveedor,
+        }
+
+        for campo, valor in campos_validacion.items():
+            if valor and valor.strip().lower() not in ["correcto", "correcta"]:
+                validaciones.append(f"{campo}: {valor.strip()}")
+
+        tri.validacion_limpia = ', '.join(validaciones) if validaciones else "Sin novedad"
+
+    return render(request, "Tri/listadoManuales.html", {
+        'tris': page_obj
+    })
 
 
 

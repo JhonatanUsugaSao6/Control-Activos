@@ -64,6 +64,27 @@
                 <input type="text" id="numero_manual" name="numero_manual" class="form-control"
                     placeholder="Ingrese número..." style="border: 2px solid black;">
             </div>
+
+            <div class="col-12 mb-3">
+                <label for="motivo_retiro" class="form-label"><b>Motivo Retiro:</b></label>
+                <select id="motivo_retiro" name="motivo_retiro" class="form-select" style="border: 2px solid black;">
+                    <option selected disabled class="text-start">Seleccione</option>
+                    <option value="Correcto" class="text-start">Correcto</option>
+                    <option value="Incorrecto" class="text-start">Incorrecto</option>
+                </select>
+            </div>
+
+            <div class="col-12 mb-3">
+                <label for="concepto_salida" class="form-label"><b>Concepto Salida:</b></label>
+                <select id="concepto_salida" name="concepto_salida" class="form-select" style="border: 2px solid black;">
+                    <option selected disabled class="text-start">Seleccione</option>
+                    <option value="Muestras" class="text-start">Muestras</option>
+                    <option value="Elementos Administrativos" class="text-start">Elementos Administrativos</option>
+                    <option value="Bienes Muebles" class="text-start">Bienes Muebles</option>
+                    <option value="Regalos" class="text-start">Regalos</option>
+                    <option value="Equipos de Cómputo o Comunicación" class="text-start">Equipos de Cómputo o Comunicación</option>
+                </select>
+            </div>
         
             <div class="col-12 mb-3">
                 <label for="sello" class="form-label"><b>Cumple con Sello:</b></label>
@@ -73,9 +94,19 @@
                     <option value="Sin Sello" class="text-start">Sin Sello</option>
                 </select>
             </div>
+
+            <div class="col-12 mb-3">
+                <label for="tachones_enmendaduras" class="form-label"><b>Sin Tachones o Enmendaduras:</b></label>
+                <select id="tachones_enmendaduras" name="tachones_enmendaduras" class="form-select" style="border: 2px solid black;">
+                    <option value="Correcto" class="text-start">Correcto</option>
+                    <option value="Tachones" class="text-start">Tachones</option>
+                    <option value="Enmendaduras" class="text-start">Enmendaduras</option>
+                    <option value="Tachones y Enmendaduras" class="text-start">Tachones y Enmendaduras</option>
+                </select>
+            </div>
         
             <div class="col-12 mb-3">
-                <label for="firma_almacen" class="form-label"><b>Cumple con Firma Almacén:</b></label>
+                <label for="firma_almacen" class="form-label"><b>Cumple Nombre Auxiliar Almacén:</b></label>
                 <select id="firma_almacen" name="firma_almacen" class="form-select" style="border: 2px solid black;">
                     <option value="Correcta" class="text-start">Correcta</option>
                     <option value="Firma Almacén Incorrecta" class="text-start">Firma Incorrecta</option>
@@ -84,7 +115,16 @@
             </div>
 
             <div class="col-12 mb-3">
-                <label for="firma_proveedor" class="form-label"><b>Cumple con Firma Proveedor:</b></label>
+                <label for="firma_autorizacion" class="form-label"><b>Cumple con Firma Autoriza:</b></label>
+                <select id="firma_autorizacion" name="firma_autorizacion" class="form-select" style="border: 2px solid black;">
+                    <option value="Correcta" class="text-start">Correcta</option>
+                    <option value="Firma Autorización Incorrecta" class="text-start">Firma Incorrecta</option>
+                    <option value="Sin Firma Autorización" class="text-start">Sin Firma</option>
+                </select>
+            </div>
+
+            <div class="col-12 mb-3">
+                <label for="firma_proveedor" class="form-label"><b>Cumple Firma de Quien Recibe:</b></label>
                 <select id="firma_proveedor" name="firma_proveedor" class="form-select" style="border: 2px solid black;">
                     <option value="Correcta" class="text-start">Correcta</option>
                     <option value="Firma Proveedor Incorrecta" class="text-start">Firma Incorrecta</option>
@@ -94,13 +134,13 @@
 
 
             <div class="col-12 text-center mt-3">
-                <label for="foto_manual" class="form-label">Foto Documento</label>
+                <label for="foto_manual" class="form-label">Foto Documento Manual</label>
                 <div class="image-upload-box" onclick="document.getElementById('foto_manual').click()">
                     <input type="file" id="foto_manual" name="foto_manual" accept="image/*" hidden onchange="previewFile(this)">
-                    <img id="preview" class="img-fluid" style="display: none;" alt="Vista previa">
+                    <img id="preview_foto_manual" class="img-fluid" style="display: none;" alt="Vista previa">
                     <span class="add-icon">+</span>
                 </div>
-                <button id="removeBtn" type="button" class="btn btn-danger btn-sm mt-2" style="display: none;" onclick="removeImage(event)">Quitar</button>
+                <button id="removeBtn_foto_manual" type="button" class="btn btn-danger btn-sm mt-2" style="display: none;" onclick="removeImage('foto_manual')">Quitar</button>
             </div>
         </div>
             
@@ -111,10 +151,11 @@
         </div>
     </form>
 
+
     <!--  Tabla para consecutivo   -->
 
     {% if resultado %}
-    <form id="formulario_post" method="post" action="{% url 'validarTri' %}">
+    <form id="formulario_post" method="post" action="{% url 'validarTri' %}" enctype="multipart/form-data">
         <input type="hidden" name="consecutivo" value="{{ consecutivo }}">
         <input type="hidden" name="consecutivo_llantas" value="{{ consecutivo_llantas }}">
         <input id="tipo_salida" type="hidden" name="tipo_salida" value="">
@@ -144,7 +185,9 @@
                             {% if resultado|length > 0 and resultado.0.Cantidad %}                   
                                 <th>Cantidad</th> 
                             {% endif %}  
-                            <th>Proveedor</th> 
+
+
+                            <!-- <th>Proveedor</th>  -->
 
                             {% if resultado|length > 0 and resultado.0.Cantidad %} 
                                 <th>Marcación</th>  
@@ -172,6 +215,12 @@
                                             <option value="Descripción Incorrecta" class="text-start">Descripción Incorrecta</option>
                                             <option value="Sin Descripción" class="text-start">Sin Descripción</option>
                                         </select>
+
+                                        <div id="foto_descripcion_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                            <label class="form-label">Evidencia Descripción</label>
+                                            <input type="file" name="foto_descripcion_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                        </div>
+
                                     </div>
                                 </div>
                             </td>
@@ -195,6 +244,12 @@
                                                 <option value="Serial Incorrecto">Serial Incorrecto</option>
                                                 <option value="Sin Serial">Sin Serial</option>
                                             </select>
+
+                                            <div id="foto_serial_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                                <label class="form-label">Evidencia Serial</label>
+                                                <input type="file" name="foto_serial_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
                                         </div>
                                     </div>
                                 </td>
@@ -225,6 +280,12 @@
                                                 <option value="Quemado Incorrecto">Quemado Incorrecto</option>
                                                 <option value="Sin Quemado">Sin Quemado</option>
                                             </select>
+
+                                            <div id="foto_quemado_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                                <label class="form-label">Evidencia Quemado</label>
+                                                <input type="file" name="foto_quemado_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
                                         </div>
                                     </div>
                                 </td>
@@ -249,6 +310,12 @@
                                                 <option value="Vin Incorrecto">Vin Incorrecto</option>
                                                 <option value="Sin Vin">Sin Vin</option>
                                             </select>
+
+                                            <div id="foto_vin_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                                <label class="form-label">Evidencia Vin</label>
+                                                <input type="file" name="foto_vin_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
                                         </div>
                                     </div>
                                 </td>
@@ -277,32 +344,18 @@
                                                 <option value="Cantidad Incorrecta" class="text-start">Cantidad Incorrecta</option>
                                                 <option value="Sin Cantidad" class="text-start">Sin Cantidad</option>
                                             </select>
+
+                                            <div id="foto_cantidad_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                                <label class="form-label">Evidencia Cantidad</label>
+                                                <input type="file" name="foto_cantidad_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
                                         </div>
                                     </div>
                                 </td>
                             {% endif %}
                            
-                    
-                            <td class="text-center align-middle">
-                                <div class="checkbox-wrapper">
-                                    <div class="form-check">
-                                        <label class="form-check-label" for="check_ubicacion_{{ forloop.counter0 }}">
-                                            {{ item.Ubicacion }}
-                                        </label>
-                                        <input type="checkbox" class="form-check-input custom-checkbox" name="ubicacion_ok_{{ forloop.counter0 }}" 
-                                        id="check_ubicacion_{{ forloop.counter0 }}" checked onchange="mostrarMotivo(this, 'ubicacion', {{ forloop.counter0 }})">
-                                    </div>
-                                    <div id="motivo_ubicacion_{{ forloop.counter0 }}" style="display: none;" class="mt-2">
-                                        <input type="hidden" name="motivo_ubicacion_{{ forloop.counter0 }}" value="Correcto">
-                                        <select name="motivo_ubicacion_{{ forloop.counter0 }}" class="form-select form-select-sm w-auto">
-                                            <option selected disabled class="text-start">Seleccione</option>
-                                            <option value="Proveedor Incorrecto" class="text-start">Proveedor Incorrecto</option>
-                                            <option value="Sin Proveedor" class="text-start">Sin Proveedor</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </td>
-                            
+                
                             {% if item.Cantidad %}
                                 <td class="text-center align-middle">
                                     <div class="checkbox-wrapper">
@@ -322,6 +375,12 @@
                                                 <option value="Marcación Borrosa" class="text-start">Marcación Borrosa</option>
                                                 <option value="Sin Marcación" class="text-start">Sin Marcación</option>
                                             </select>
+
+                                            <div id="foto_marcacion_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                                                <label class="form-label">Evidencia Marcacion</label>
+                                                <input type="file" name="foto_marcacion_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
                                         </div>
                                     </div>
                                 </td>
@@ -336,41 +395,92 @@
 
         {% if resultado %}
             <div class="col-12 mb-3 mt-5">
-                <label for="fecha" class="form-label"><b>Fecha: {{ resultado.0.Fecha350 }}</b></label>
-                <select id="fecha" name="fecha" class="form-select" style="border: 2px solid black;">
-                    <option value="Correcta" class="text-start">Correcta</option>
-                    <option value="Fecha Incorrecta" class="text-start">Fecha Incorrecta</option>
-                    <option value="Sin Fecha" class="text-start">Sin Fecha</option>
+                <label for="fecha{{ forloop.counter0 }}" class="form-label"><b>Fecha: {{ resultado.0.Fecha350 }}</b></label>
+                <select id="fecha{{ forloop.counter0 }}" name="fecha" class="form-select" style="border: 2px solid black;">
+                    <option value="Correcta">Correcta</option>
+                    <option value="Fecha Incorrecta">Fecha Incorrecta</option>
+                    <option value="Sin Fecha">Sin Fecha</option>
                 </select>
+
+                <div id="foto_fecha_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                    <label class="form-label">Evidencia Fecha</label>
+                    <input type="file" name="foto_fecha_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                </div>
+            </div>
+        {% endif %}
+
+        {% if resultado.0.Vin %}
+            <div class="col-12 mb-3">
+                <label for="documento_anexo{{ forloop.counter0 }}" class="form-label"><b>Cumple con Documento Anexo:</b></label>
+                <select id="documento_anexo{{ forloop.counter0 }}" name="documento_anexo" class="form-select" style="border: 2px solid black;">
+                    <option value="Correcto">Correcto</option>
+                    <option value="Documento Anexo Incorrecto">Documento Anexo Incorrecto</option>
+                    <option value="Sin Documento Anexo">Sin Documento Anexo</option>
+                </select>
+
+                <div id="foto_documentoanexo_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                    <label class="form-label">Evidencia Documento Anexo</label>
+                    <input type="file" name="foto_documentoanexo_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+                </div>
             </div>
         {% endif %}
 
         <div class="col-12 mb-3">
-            <label for="sello" class="form-label"><b>Cumple con Sello:</b></label>
-            <select id="sello" name="sello" class="form-select" style="border: 2px solid black;">
-                <option value="Correcto" class="text-start">Correcto</option>
-                <option value="Sello Incorrecto" class="text-start">Sello Incorrecto</option>
-                <option value="Sin Sello" class="text-start">Sin Sello</option>
+            <label for="cumple_proveedor{{ forloop.counter0 }}" class="form-label"><b>Cumple con Proveedor:</b></label>
+            <select id="cumple_proveedor{{ forloop.counter0 }}" name="cumple_proveedor" class="form-select" style="border: 2px solid black;">
+                <option value="Correcto">Correcto</option>
+                <option value="Proveedor Incorrecto">Proveedor Incorrecto</option>
+                <option value="Sin Proveedor">Sin Proveedor</option>
             </select>
-        </div>
-    
-        <div class="col-12 mb-3">
-            <label for="firma_almacen" class="form-label"><b>Cumple con Firma Almacén:</b></label>
-            <select id="firma_almacen" name="firma_almacen" class="form-select" style="border: 2px solid black;">
-                <option value="Correcta" class="text-start">Correcta</option>
-                <option value="Firma Almacén Incorrecta" class="text-start">Firma Incorrecta</option>
-                <option value="Sin Firma Almacén" class="text-start">Sin Firma</option>
-            </select>
+
+            <div id="foto_proveedor_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                <label class="form-label">Evidencia Proveedor</label>
+                <input type="file" name="foto_proveedor_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+            </div>
         </div>
 
         <div class="col-12 mb-3">
-            <label for="firma_proveedor" class="form-label"><b>Cumple con Firma Proveedor:</b></label>
-            <select id="firma_proveedor" name="firma_proveedor" class="form-select" style="border: 2px solid black;">
-                <option value="Correcta" class="text-start">Correcta</option>
-                <option value="Firma Proveedor Incorrecta" class="text-start">Firma Incorrecta</option>
-                <option value="Sin Firma Proveedor" class="text-start">Sin Firma</option>
+            <label for="sello{{ forloop.counter0 }}" class="form-label"><b>Cumple con Sello:</b></label>
+            <select id="sello{{ forloop.counter0 }}" name="sello" class="form-select" style="border: 2px solid black;">
+                <option value="Correcto">Correcto</option>
+                <option value="Sello Incorrecto">Sello Incorrecto</option>
+                <option value="Sin Sello">Sin Sello</option>
             </select>
+
+            <div id="foto_sello_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                <label class="form-label">Evidencia Sello</label>
+                <input type="file" name="foto_sello_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+            </div>
         </div>
+
+        <div class="col-12 mb-3">
+            <label for="firma_almacen{{ forloop.counter0 }}" class="form-label"><b>Cumple con Firma Almacén:</b></label>
+            <select id="firma_almacen{{ forloop.counter0 }}" name="firma_almacen" class="form-select" style="border: 2px solid black;">
+                <option value="Correcta">Correcta</option>
+                <option value="Firma Almacén Incorrecta">Firma Incorrecta</option>
+                <option value="Sin Firma Almacén">Sin Firma</option>
+            </select>
+
+            <div id="foto_firmaalmacen_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                <label class="form-label">Evidencia Firma Almacén</label>
+                <input type="file" name="foto_firmaalmacen_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+            </div>
+        </div>
+
+        <div class="col-12 mb-3">
+            <label for="firma_proveedor{{ forloop.counter0 }}" class="form-label"><b>Cumple con Firma Proveedor:</b></label>
+            <select id="firma_proveedor{{ forloop.counter0 }}" name="firma_proveedor" class="form-select" style="border: 2px solid black;">
+                <option value="Correcta">Correcta</option>
+                <option value="Firma Proveedor Incorrecta">Firma Incorrecta</option>
+                <option value="Sin Firma Proveedor">Sin Firma</option>
+            </select>
+
+            <div id="foto_firmaproveedor_{{ forloop.counter0 }}" class="mt-2" style="display: none;">
+                <label class="form-label">Evidencia Firma Proveedor</label>
+                <input type="file" name="foto_firmaproveedor_general_{{ forloop.counter0 }}" accept="image/*" class="form-control form-control-sm">
+            </div>
+        </div>
+
 
         
         <input type="hidden" name="total_items" value="{{ resultado|length }}">
@@ -391,14 +501,19 @@
     
     function mostrarMotivo(checkboxElement, tipo, index) {
         const motivoDiv = document.getElementById('motivo_' + tipo + '_' + index);
+        const fotoDiv = document.getElementById('foto_' + tipo + '_' + index);
+    
         if (checkboxElement.checked) {
-            motivoDiv.style.display = 'none';
+            if (motivoDiv) motivoDiv.style.display = 'none';
+            if (fotoDiv) fotoDiv.style.display = 'none';
         } else {
-            motivoDiv.style.display = 'block';
+            if (motivoDiv) motivoDiv.style.display = 'block';
+            if (fotoDiv) fotoDiv.style.display = 'block';
         }
     }
     
     document.addEventListener("DOMContentLoaded", function () {
+        // Manejar tipo de formulario según tipo_ingreso
         const select = document.getElementById("tipo_ingreso");
         const inputTipoSalida = document.querySelector("#formulario_post #tipo_salida");
         const formularioConsecutivo = document.getElementById("formulario_consecutivo");
@@ -413,37 +528,55 @@
             formularioManual.style.display = (tipo === "manual") ? "flex" : "none";
             formularioLlantas.style.display = (tipo === "consecutivo llantas") ? "flex" : "none";
     
-            if (tabla) {
-                tabla.style.display = (tipo === "manual") ? "none" : "table";
-            }
-    
-            if (boton) {
-                boton.textContent = (tipo === "manual") ? "Guardar" : "Buscar";
-            }
-    
+            if (tabla) tabla.style.display = (tipo === "manual") ? "none" : "table";
+            if (boton) boton.textContent = (tipo === "manual") ? "Guardar" : "Buscar";
             if (guardar) {
                 guardar.style.display = (tipo === "manual") ? "none" : "block";
                 guardar.style.margin = "0 auto";
             }
     
             const formSalida = document.getElementById("formulario_salida");
-            if (formSalida) {
-                formSalida.method = (tipo === "manual") ? "post" : "get";
-            }
+            if (formSalida) formSalida.method = (tipo === "manual") ? "post" : "get";
     
-            if (inputTipoSalida) {
-                inputTipoSalida.value = tipo;
-                console.log("Valor en input hidden:", inputTipoSalida.value);
-            }
+            if (inputTipoSalida) inputTipoSalida.value = tipo;
         }
     
-        // Al cargar la página
         actualizarFormulario(select.value);
-    
-        // Al cambiar el select
         select.addEventListener("change", function () {
             actualizarFormulario(this.value);
         });
+    
+        // Mostrar u ocultar evidencias generales
+        function manejarTodosSelectsConPrefijo(prefijoSelect, prefijoDivFoto) {
+            const selects = document.querySelectorAll(`select[id^="${prefijoSelect}"]`);
+    
+            selects.forEach(select => {
+                const id = select.id;
+                const index = id.replace(prefijoSelect, "");
+                const fotoDiv = document.getElementById(`${prefijoDivFoto}${index}`);
+    
+                if (!fotoDiv) return;
+    
+                function verificarEvidencia() {
+                    const valor = select.value.toLowerCase();
+                    if (valor === "correcto" || valor === "correcta") {
+                        fotoDiv.style.display = "none";
+                    } else {
+                        fotoDiv.style.display = "block";
+                    }
+                }
+    
+                select.addEventListener("change", verificarEvidencia);
+                verificarEvidencia();
+            });
+        }
+    
+        manejarTodosSelectsConPrefijo("fecha", "foto_fecha_");
+        manejarTodosSelectsConPrefijo("documento_anexo", "foto_documentoanexo_");
+        manejarTodosSelectsConPrefijo("cumple_proveedor", "foto_proveedor_");
+        manejarTodosSelectsConPrefijo("sello", "foto_sello_");
+        manejarTodosSelectsConPrefijo("firma_almacen", "foto_firmaalmacen_");
+        manejarTodosSelectsConPrefijo("firma_proveedor", "foto_firmaproveedor_");
     });
 
 
@@ -452,35 +585,35 @@
         window.previewFile = function (input) {
             const file = input.files[0];
             if (!file) return;
-    
-            const reader = new FileReader();
-            const previewImg = document.getElementById("preview");
-            const removeBtn = document.getElementById("removeBtn");
+        
+            const id = input.id;
+            const previewImg = document.getElementById("preview_" + id);
+            const removeBtn = document.getElementById("removeBtn_" + id);
             const box = input.closest(".image-upload-box");
-    
+        
+            const reader = new FileReader();
             reader.onload = function (e) {
                 previewImg.src = e.target.result;
                 previewImg.style.display = "block";
                 box.querySelector(".add-icon").style.display = "none";
                 removeBtn.style.display = "inline-block";
             };
-    
+        
             reader.readAsDataURL(file);
-        }
-    
-        window.removeImage = function (event) {
-            event.preventDefault();
-            const input = document.getElementById("foto_manual");
-            const previewImg = document.getElementById("preview");
-            const removeBtn = document.getElementById("removeBtn");
+        };
+        
+        window.removeImage = function (inputId) {
+            const input = document.getElementById(inputId);
+            const previewImg = document.getElementById("preview_" + inputId);
+            const removeBtn = document.getElementById("removeBtn_" + inputId);
             const box = input.closest(".image-upload-box");
-    
+        
             input.value = "";
             previewImg.src = "";
             previewImg.style.display = "none";
             removeBtn.style.display = "none";
             box.querySelector(".add-icon").style.display = "block";
-        }
+        };
     
     });
 
